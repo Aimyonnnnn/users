@@ -128,19 +128,21 @@ def safe_json_loads(data):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        admins = load_admins()
-        for admin in admins:
-            if admin['username'] == username and bcrypt.checkpw(password.encode(), admin['password'].encode()):
-                session['admin_id'] = admin['admin_id']
-                flash("로그인 성공!", "success")
-                return redirect(url_for('home'))
-        
-        return render_template('login.html', error="아이디 또는 비밀번호가 잘못되었습니다.")
-    
-    return render_template('login.html', error=None)
+        try:
+            username = request.form['username']
+            password = request.form['password']
+
+            admins = load_admins()
+            for admin in admins:
+                if admin['username'] == username and bcrypt.checkpw(password.encode(), admin['password'].encode()):
+                    session['admin_id'] = admin['admin_id']
+                    flash("로그인 성공!", "success")
+                    return redirect(url_for('home'))
+
+            return render_template('login.html', error="아이디 또는 비밀번호가 잘못되었습니다.")
+        except Exception as e:
+            print("로그인 중 오류:", e)  # 로그에 찍힘
+            return "Internal Server Error", 500
 
 # 로그아웃
 @app.route('/logout')
