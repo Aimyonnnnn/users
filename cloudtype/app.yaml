@@ -1,0 +1,13 @@
+name: user-management
+app: python@3.9
+options:
+  env:
+    - name: FLASK_ENV
+      value: production
+  install: pip install -r requirements.txt
+  start: gunicorn --bind 0.0.0.0:$PORT app:app
+ports: 5000/http
+context:
+  git:
+    url: https://github.com/너의계정/user-management-system.git
+    branch: main
