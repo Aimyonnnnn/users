@@ -472,7 +472,11 @@ def delete_all_logs(user_id):
     conn.close()
     return redirect(url_for('view_logs', user_id=user_id))
 
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     port = int(os.getenv("PORT", 5000))  # 클라우드타입에서 PORT 환경 변수 사용, 기본값 5000
     app.run(host='0.0.0.0', port=port, debug=False)  # debug=False로 프로덕션 설정
+
+
+
