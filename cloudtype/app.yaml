@@ -5,9 +5,9 @@ options:
     - name: FLASK_ENV
       value: production
   install: pip install -r requirements.txt
-  start: gunicorn --bind 0.0.0.0:$PORT app:app
+  start: gunicorn --bind 0.0.0.0:$PORT --workers 2 app:app
 ports: 5000/http
 context:
   git:
-    url: https://github.com/너의계정/user-management-system.git
+    url: https://github.com/Aimyonnnnn/users.git
     branch: main
