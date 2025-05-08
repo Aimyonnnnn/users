@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_cors import CORS  # CORS 추가
 import sqlite3
 import bcrypt
 from datetime import datetime, timedelta
@@ -10,6 +11,7 @@ import os
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
+CORS(app, supports_credentials=True)  # CORS 설정, 세션 쿠키 지원
 
 # Fernet 키 생성/로드
 key_file = 'encryption_key.key'
@@ -128,21 +130,19 @@ def safe_json_loads(data):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        try:
-            username = request.form['username']
-            password = request.form['password']
-
-            admins = load_admins()
-            for admin in admins:
-                if admin['username'] == username and bcrypt.checkpw(password.encode(), admin['password'].encode()):
-                    session['admin_id'] = admin['admin_id']
-                    flash("로그인 성공!", "success")
-                    return redirect(url_for('home'))
-
-            return render_template('login.html', error="아이디 또는 비밀번호가 잘못되었습니다.")
-        except Exception as e:
-            print("로그인 중 오류:", e)  # 로그에 찍힘
-            return "Internal Server Error", 500
+        username = request.form['username']
+        password = request.form['password']
+        
+        admins = load_admins()
+        for admin in admins:
+            if admin['username'] == username and bcrypt.checkpw(password.encode(), admin['password'].encode()):
+                session['admin_id'] = admin['admin_id']
+                flash("로그인 성공!", "success")
+                return redirect(url_for('home'))
+        
+        return render_template('login.html', error="아이디 또는 비밀번호가 잘못되었습니다.")
+    
+    return render_template('login.html', error=None)
 
 # 로그아웃
 @app.route('/logout')
@@ -150,6 +150,13 @@ def logout():
     session.pop('admin_id', None)
     flash("로그아웃되었습니다.", "success")
     return redirect(url_for('login'))
+
+# 인증 상태 확인 API
+@app.route('/check-auth', methods=['GET'])
+def check_auth():
+    if 'admin_id' in session:
+        return jsonify({"authenticated": True}), 200
+    return jsonify({"authenticated": False}), 401
 
 # 관리자 설정 페이지
 @app.route('/admin_settings', methods=['GET', 'POST'])
@@ -472,11 +479,7 @@ def delete_all_logs(user_id):
     conn.close()
     return redirect(url_for('view_logs', user_id=user_id))
 
-init_db()
-
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000))  # 클라우드타입에서 PORT 환경 변수 사용, 기본값 5000
-    app.run(host='0.0.0.0', port=port, debug=False)  # debug=False로 프로덕션 설정
-
-
-
+    init_db()
+    port = int(os.getenv("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
