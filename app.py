@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from flask_cors import CORS  # CORS 추가
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 import bcrypt
 from datetime import datetime, timedelta
@@ -11,7 +10,6 @@ import os
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
-CORS(app, supports_credentials=True)  # CORS 설정, 세션 쿠키 지원
 
 # Fernet 키 생성/로드
 key_file = 'encryption_key.key'
@@ -150,13 +148,6 @@ def logout():
     session.pop('admin_id', None)
     flash("로그아웃되었습니다.", "success")
     return redirect(url_for('login'))
-
-# 인증 상태 확인 API
-@app.route('/check-auth', methods=['GET'])
-def check_auth():
-    if 'admin_id' in session:
-        return jsonify({"authenticated": True}), 200
-    return jsonify({"authenticated": False}), 401
 
 # 관리자 설정 페이지
 @app.route('/admin_settings', methods=['GET', 'POST'])
@@ -481,5 +472,5 @@ def delete_all_logs(user_id):
 
 if __name__ == '__main__':
     init_db()
-    port = int(os.getenv("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = int(os.getenv("PORT", 5000))  # 클라우드타입에서 PORT 환경 변수 사용, 기본값 5000
+    app.run(host='0.0.0.0', port=port, debug=False)  # debug=False로 프로덕션 설정
